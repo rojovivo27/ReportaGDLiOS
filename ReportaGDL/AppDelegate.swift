@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import GoogleMaps
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,6 +17,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        GMSServices.provideAPIKey("AIzaSyCUBMAbeUlOW3ZWU4HFWrFYTs4fpXxjMX0")
+        
+        if((UserDefaults.standard.object(forKey: "Login")) != nil){
+            //Do nothing
+        } else {
+            UserDefaults.standard.set(false, forKey: "Login")
+        }
+        if((UserDefaults.standard.object(forKey: "newIncidence")) != nil){
+            //Do nothing
+        } else {
+            UserDefaults.standard.set(false, forKey: "newIncidence")
+        }
+        let pageController = UIPageControl.appearance()
+        pageController.currentPageIndicatorTintColor = UIColor(red: 192/255, green: 40/255, blue: 53/255, alpha: 1.0)
+        pageController.pageIndicatorTintColor = UIColor.white
+        
+        
+        
         return true
     }
 

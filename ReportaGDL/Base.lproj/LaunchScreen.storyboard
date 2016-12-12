@@ -1,7 +1,11 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11134" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2659" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11106"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11524"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -16,7 +20,27 @@
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="bk-imgmain" translatesAutoresizingMaskIntoConstraints="NO" id="WnG-v8-jL3">
+                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                            </imageView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="LogoReporta" translatesAutoresizingMaskIntoConstraints="NO" id="ZcW-9z-uav">
+                                <rect key="frame" x="125" y="135" width="125" height="190"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="190" id="J21-Wb-X7S"/>
+                                    <constraint firstAttribute="width" constant="125" id="efn-Mm-eSp"/>
+                                </constraints>
+                            </imageView>
+                        </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="xb3-aO-Qok" firstAttribute="top" secondItem="WnG-v8-jL3" secondAttribute="bottom" id="Fvc-8b-QjQ"/>
+                            <constraint firstAttribute="trailing" secondItem="WnG-v8-jL3" secondAttribute="trailing" id="GKu-Yu-3g0"/>
+                            <constraint firstItem="ZcW-9z-uav" firstAttribute="centerX" secondItem="WnG-v8-jL3" secondAttribute="centerX" id="HRe-7e-vzS"/>
+                            <constraint firstItem="WnG-v8-jL3" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="R5B-k0-DyS"/>
+                            <constraint firstItem="ZcW-9z-uav" firstAttribute="top" secondItem="Llm-lL-Icb" secondAttribute="bottom" constant="115" id="doh-ye-KBj"/>
+                            <constraint firstItem="WnG-v8-jL3" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="eB0-1l-RIa"/>
+                        </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -24,4 +48,8 @@
             <point key="canvasLocation" x="53" y="375"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="LogoReporta" width="122" height="182"/>
+        <image name="bk-imgmain" width="375" height="667"/>
+    </resources>
 </document>
