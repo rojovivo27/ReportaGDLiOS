@@ -18,12 +18,17 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
     var userLatitude = 0.0
     var userLongitude = 0.0
     
-    let latCUCEA = 20.7419849
-    let lonCUCEA = -103.3801782
+    let latGDL = 20.6770371//20.7419849 CUCEA
+    let lonGDL = -103.3470154//-103.3801782 CUCEA
     
     let incidenceMarker = GMSMarker()
     
     var incidents  = [GMSMarker]()
+    
+    var marksSet = false
+    
+    
+    @IBOutlet weak var loading: UIActivityIndicatorView!
     
     //Blur
     @IBOutlet weak var blurImage: UIImageView!
@@ -60,7 +65,7 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
         
         mapView.delegate = self
         mapView.padding = UIEdgeInsetsMake(0, 0, 80, 0)
-        mapView.setMinZoom(16, maxZoom: 20)
+        mapView.setMinZoom(10, maxZoom: 20)
         
         //Maps Stuff
         
@@ -83,7 +88,11 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
         let login = (UserDefaults.standard.value(forKey: "Login")) as! Bool
         if(!login){
             performSegue(withIdentifier: "WelcomePage", sender: self)
+        } else {
+            marksSet = false
         }
+        
+        
         
         UIApplication.shared.statusBarStyle = .default
         
@@ -133,8 +142,10 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
     
     override func viewDidAppear(_ animated: Bool) {
         let newIncidence = UserDefaults.standard.value(forKey: "newIncidence") as! Bool
-        if(newIncidence){
+        let login = (UserDefaults.standard.value(forKey: "Login")) as! Bool
+        if(newIncidence && login && !marksSet){
             setMarks()
+            marksSet = true
             UserDefaults.standard.set(false, forKey: "newIncidence")
         }
         
@@ -233,8 +244,12 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
             userLatitude = location.coordinate.latitude
             userLongitude = location.coordinate.longitude
             
-            setMarks()
-
+            let login = (UserDefaults.standard.value(forKey: "Login")) as! Bool
+            if(login && !marksSet){
+                setMarks()
+                marksSet = true
+                print("MARKS")
+            }
         }
     }
     
@@ -267,13 +282,13 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
     
     @IBAction func acceptTapped(_ sender: AnyObject) {
         
-        let locationCUCEA = CLLocation(latitude: latCUCEA, longitude: lonCUCEA)
+        let locationCUCEA = CLLocation(latitude: latGDL, longitude: lonGDL)
         let locationReport = CLLocation(latitude: self.latitude, longitude: self.longitude)
         let distance = locationCUCEA.distance(from: locationReport)
         
         print(distance)
         
-        if (distance < 500) {
+        if (distance < 12000) {
             btnCancel.isHidden = true
             btnAccept.isHidden = true
             lblMensaje.isHidden = true
@@ -286,7 +301,7 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
             })
         } else {
             //1. Create the alert controller.
-            let alert = UIAlertController(title: "Cuidado", message: "Tienes que seleccionar un área dentro de CUCEA", preferredStyle: .alert)
+            let alert = UIAlertController(title: "Cuidado", message: "Tienes que seleccionar un área dentro de la zona metropolitana", preferredStyle: .alert)
             // 3. Grab the value from the text field, and print it when the user clicks OK.
             let action = UIAlertAction(title: "Ok", style: UIAlertActionStyle.default) {
                 action in print("")
@@ -314,6 +329,8 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
     }
     
     func setMarks() {
+        
+        loading.startAnimating()
         
         mapView.clear()
         
@@ -344,6 +361,12 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
             let task = URLSession.shared.dataTask(with: request as URLRequest){ data, response, error in
                 if error != nil{
                     print("Error -> \(error)")
+                    DispatchQueue.main.async(execute: {
+                        self.displayAlertMessage("Error", userMessage: "Parece que no tienes una conexión estable a internet. Intenta más tarde", action: UIAlertAction(title: "Ok", style: UIAlertActionStyle.default) {
+                            action in
+                            print("")
+                        })
+                    });
                     return
                 }
                 
@@ -356,6 +379,7 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
                         if(resultValue == 1) {
                             
                             DispatchQueue.main.async(execute: {
+                                self.loading.stopAnimating()
                                 for incidence in (parseJSON["incidencias"] as? [[String: AnyObject]])!{
                                     let lat = Float(incidence["incidencia_lat"]! as! String)!
                                     let lon = Float(incidence["incidencia_lon"]! as! String)!
@@ -387,19 +411,33 @@ class MainViewController: UIViewController, CLLocationManagerDelegate, GMSMapVie
                                 }
                             })
                             
+                        } else {
+                            DispatchQueue.main.async(execute: {
+                                self.loading.stopAnimating()
+                            })
                         }
                         
                     }
                     
                 } catch {
                     print("Error -> \(error)")
+                    self.loading.stopAnimating()
                 }
             }
             
             task.resume()
         } catch {
             print(error)
+            self.loading.stopAnimating()
         }
+    }
+    
+    func displayAlertMessage(_ title: String, userMessage : String, action : UIAlertAction){
+        let myAlert = UIAlertController(title: title, message: userMessage, preferredStyle: UIAlertControllerStyle.alert)
+        
+        myAlert.addAction(action)
+        
+        self.present(myAlert, animated: true, completion: nil)
     }
     
     func buttonAction(sender: UIButton!) {

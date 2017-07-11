@@ -27,10 +27,10 @@ class WelcomePageViewController: UIViewController, UIPageViewControllerDataSourc
         registerBtn.layer.cornerRadius = 5
         
         self.pageDescriptions = NSArray(objects:
-            "Reporta CUCEA es una plataforma de colaboración donde ayudarás a tener un mejor campus."
+            "Reporta GDL es una plataforma de colaboración donde ayudarás a tener una mejor calidad de vida."
             ,"Aquí podrás reportar de manera fácil y rápida cualquier incidente"
             ,"Además podrás calificar la solución al problema dando tu punto de vista de la solución implementada."
-            ,"Ayúdanos a mejorar el campus, Reporta CUCEA")
+            ,"Ayúdanos a mejorar el entorno, Reporta GDL")
         
         self.pageViewController = self.storyboard?.instantiateViewController(withIdentifier: "PageViewController") as! UIPageViewController
         self.pageViewController.dataSource = self

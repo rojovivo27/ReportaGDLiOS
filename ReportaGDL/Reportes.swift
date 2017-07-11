@@ -45,6 +45,14 @@ class Reportes: UIViewController, UITableViewDelegate, UITableViewDataSource {
             let task = URLSession.shared.dataTask(with: request as URLRequest){ data, response, error in
                 if error != nil{
                     print("Error -> \(error)")
+                    DispatchQueue.main.async(execute: {
+                        self.displayAlertMessage("Error", userMessage: "Parece que no tienes una conexión estable a internet. Intenta más tarde", action: UIAlertAction(title: "Ok", style: UIAlertActionStyle.default) {
+                            action in
+                            print("")
+                            self.loading.stopAnimating()
+                        })
+                    });
+
                     return
                 }
                 
@@ -79,6 +87,12 @@ class Reportes: UIViewController, UITableViewDelegate, UITableViewDataSource {
                                 self.loading.stopAnimating()
                             });
                             
+                        } else {
+                            self.displayAlertMessage("Mensaje", userMessage: "No has registrado ningun reporte.", action: UIAlertAction(title: "Ok", style: UIAlertActionStyle.default) {
+                                action in
+                                print("")
+                                self.loading.stopAnimating()
+                            })
                         }
                         
                     }
@@ -92,6 +106,14 @@ class Reportes: UIViewController, UITableViewDelegate, UITableViewDataSource {
         } catch {
             print(error)
         }
+    }
+    
+    func displayAlertMessage(_ title: String, userMessage : String, action : UIAlertAction){
+        let myAlert = UIAlertController(title: title, message: userMessage, preferredStyle: UIAlertControllerStyle.alert)
+        
+        myAlert.addAction(action)
+        
+        self.present(myAlert, animated: true, completion: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -280,6 +302,13 @@ class Reportes: UIViewController, UITableViewDelegate, UITableViewDataSource {
                     let task = URLSession.shared.dataTask(with: request as URLRequest){ data, response, error in
                         if error != nil{
                             print("Error -> \(error)")
+                            DispatchQueue.main.async(execute: {
+                                self.displayAlertMessage("Error", userMessage: "Parece que no tienes una conexión estable a internet. Intenta más tarde", action: UIAlertAction(title: "Ok", style: UIAlertActionStyle.default) {
+                                    action in
+                                    print("")
+                                    self.loading.stopAnimating()
+                                })
+                            });
                             return
                         }
                         

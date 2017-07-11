@@ -13,11 +13,19 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
     var categorias = [Category]()
     var subcategorias = [Category]()
     
+    var imgFrame = CGRect()
+    var btnFrame = CGRect()
+    var picked = false
+    
     var latitude = 0.0
     var longitude = 0.0
     var category = -1
     var subcategory = -1
     
+    @IBOutlet weak var scrollView: UIScrollView!
+    var activeField: UITextView?
+    
+    @IBOutlet weak var imgDescription: UIImageView!
     @IBOutlet weak var txtDescription: UITextView!
     @IBOutlet weak var btnReport: UIButton!
     @IBOutlet weak var btnCategory: UIButton!
@@ -37,6 +45,12 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
     
     override func viewDidLoad() {
         
+        imgFrame = imgFoto.frame
+        btnFrame = btnReport.frame
+        
+        registerForKeyboardNotifications()
+        txtDescription.delegate = self
+        
         //MARK: Getting the available categories
         do {
             
@@ -49,6 +63,12 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
             let task = URLSession.shared.dataTask(with: request as URLRequest){ data, response, error in
                 if error != nil{
                     print("Error -> \(error)")
+                    DispatchQueue.main.async(execute: {
+                        self.displayAlertMessage("Error", userMessage: "Parece que no tienes una conexión estable a internet. Intenta más tarde", action: UIAlertAction(title: "Ok", style: UIAlertActionStyle.default) {
+                            action in
+                            print("")
+                        })
+                    });
                     return
                 }
                 
@@ -110,8 +130,37 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
         
         activityIndicator.hidesWhenStopped = true
         
+        if(view.frame.height < 500) {
+            var frameRect = txtDescription.frame;
+            frameRect.size.height = frameRect.size.height * 0.66; // <-- Specify the height you want here.
+            txtDescription.frame = frameRect;
+            var frameRectImg = imgDescription.frame;
+            frameRectImg.size.height = frameRectImg.size.height * 0.66; // <-- Specify the height you want here.
+            imgDescription.frame = frameRectImg;
+            
+        }
         
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        if(picked){
+            self.imgFoto.frame = self.imgFrame
+            self.btnReport.frame = self.btnFrame
+        }
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
         
+        if(view.frame.height < 500) {
+            var frame = self.txtDescription.frame
+            frame.size.height = frame.size.height * 0.9
+            self.txtDescription.frame = frame
+            
+            let aspectRatioTextViewConstraint = NSLayoutConstraint(item: self.txtDescription, attribute: .height, relatedBy: .equal, toItem: self.txtDescription, attribute: .width, multiplier: txtDescription.bounds.height/txtDescription.bounds.width, constant: 1)
+            self.txtDescription.addConstraint(aspectRatioTextViewConstraint)
+            
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -136,6 +185,8 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
     override func viewWillDisappear(_ animated: Bool) {
         self.navigationController?.isNavigationBarHidden = false
         UIApplication.shared.statusBarStyle = .default
+        
+        deregisterFromKeyboardNotifications()
     }
 
     
@@ -152,11 +203,6 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
         return true
     }
     
-    func textViewDidBeginEditing(_ textView: UITextView) {
-        if (textView.text == "Descripción:") {
-           textView.text = ""
-        }
-    }
     
     func dismissKeyboard() {
         self.view.endEditing(true)
@@ -233,10 +279,22 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
     }
     
     @IBAction func choosePhotoTapped(_ sender: AnyObject) {
-        imagePicker.allowsEditing = false
-        imagePicker.sourceType = .camera
         
-        present(imagePicker, animated: true, completion: nil)
+        imagePicker.allowsEditing = false
+        
+        let chooseSource = UIAlertController(title: "Elegir fuente", message: "Elige la fuente de la imagen que desas reportar", preferredStyle: UIAlertControllerStyle.alert)
+        
+        chooseSource.addAction(UIAlertAction(title: "Cámara", style: .default, handler: { (action: UIAlertAction!) in
+            self.imagePicker.sourceType = .camera
+            self.present(self.imagePicker, animated: true, completion: nil)
+        }))
+        
+        chooseSource.addAction(UIAlertAction(title: "Álbum", style: .default, handler: { (action: UIAlertAction!) in
+            self.imagePicker.sourceType = .photoLibrary
+            self.present(self.imagePicker, animated: true, completion: nil)
+        }))
+        
+        present(chooseSource, animated: true, completion: nil)
         
     }
     
@@ -252,8 +310,11 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
             btnFoto.isHidden = true
             lblFoto.isHidden = true
         }
+        dismiss(animated: true, completion: {
+            self.picked = true
+            self.viewDidAppear(true)
+        })
         
-        dismiss(animated: true, completion: nil)
     }
     
     func loadSubcategories(_ id: Int){
@@ -285,6 +346,13 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
             let task = URLSession.shared.dataTask(with: request as URLRequest){ data, response, error in
                 if error != nil{
                     print("Error -> \(error)")
+                    DispatchQueue.main.async(execute: {
+                        self.displayAlertMessage("Error", userMessage: "Parece que no tienes una conexión estable a internet. Intenta más tarde", action: UIAlertAction(title: "Ok", style: UIAlertActionStyle.default) {
+                            action in
+                            print("")
+                        })
+                    });
+
                     return
                 }
                 
@@ -325,6 +393,9 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
     }
     
     @IBAction func generateReport(_ sender: AnyObject) {
+        
+        print(imgFoto.frame)
+        print(btnReport.frame)
         
         var action:UIAlertAction
         action = UIAlertAction(title: "Ok", style: UIAlertActionStyle.default) {
@@ -390,6 +461,13 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
             
             if error != nil {
                 print("error=\(error)")
+                DispatchQueue.main.async(execute: {
+                    self.displayAlertMessage("Error", userMessage: "Parece que no tienes una conexión estable a internet. Intenta más tarde", action: UIAlertAction(title: "Ok", style: UIAlertActionStyle.default) {
+                        action in
+                        print("")
+                        self.activityIndicator.stopAnimating()
+                    })
+                });
                 return
             }
             
@@ -478,6 +556,71 @@ class NewReport: UIViewController, UITableViewDelegate, UITableViewDataSource, U
     
     func generateBoundaryString() -> String {
         return "Boundary-\(NSUUID().uuidString)"
+    }
+    
+    //SCROLL VIEW STUFF
+    func registerForKeyboardNotifications(){
+        //Adding notifies on keyboard appearing
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWasShown(notification:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillBeHidden(notification:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+    }
+    
+    func deregisterFromKeyboardNotifications(){
+        //Removing notifies on keyboard appearing
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+    }
+    
+    private func findActiveTextField (subviews : [UIView], textField : inout UITextView?) { for view in subviews { if let tf = view as? UITextView, view.isFirstResponder { textField = tf; break } else if !view.subviews.isEmpty { findActiveTextField (subviews: view.subviews, textField: &textField) } } }
+    
+    func keyboardWasShown(notification: NSNotification){
+        //Need to calculate keyboard exact size due to Apple suggestions
+        self.scrollView.isScrollEnabled = true
+        var info = notification.userInfo!
+        let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.size
+        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, keyboardSize!.height, 0.0)
+        
+        self.scrollView.contentInset = contentInsets
+        self.scrollView.scrollIndicatorInsets = contentInsets
+        
+        var aRect : CGRect = self.view.frame
+        aRect.size.height -= keyboardSize!.height
+        findActiveTextField(subviews:view.subviews, textField: &activeField)
+        if let activeField = self.activeField {
+            print(aRect)
+            print(CGPoint(x: activeField.frame.maxX, y: activeField.frame.maxY))
+            if (!aRect.contains(CGPoint(x: activeField.frame.maxX, y: activeField.frame.maxY))){
+                self.scrollView.scrollRectToVisible(activeField.frame, animated: true)
+            }
+        }
+        print(scrollView.bounds)
+    }
+    
+    func keyboardWillBeHidden(notification: NSNotification){
+        //Once keyboard disappears, restore original positions
+        var info = notification.userInfo!
+        let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.size
+        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, -keyboardSize!.height, 0.0)
+        self.scrollView.contentInset = contentInsets
+        self.scrollView.scrollIndicatorInsets = contentInsets
+        self.view.endEditing(true)
+        self.scrollView.isScrollEnabled = false
+        
+        print(scrollView.bounds)
+    }
+    
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        if (textView.text == "Descripción:") {
+            textView.text = ""
+        }
+        activeField = textView
+    }
+    
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if (textView.text == "") {
+            textView.text = "Descripción:"
+        }
+        activeField = nil
     }
     
 }

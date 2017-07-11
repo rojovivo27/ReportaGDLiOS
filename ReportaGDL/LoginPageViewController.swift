@@ -9,7 +9,10 @@
 import UIKit
 
 class LoginPageViewController: UIViewController, UITextFieldDelegate {
-        
+    
+    
+    @IBOutlet weak var scrollView: UIScrollView!
+    var activeField: UITextField?
         
     @IBOutlet weak var btnLogin: UIButton!
     @IBOutlet weak var txtEmail: UITextField!
@@ -22,7 +25,12 @@ class LoginPageViewController: UIViewController, UITextFieldDelegate {
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(RegisterPageViewController.dismissKeyboard))
         self.view.addGestureRecognizer(tap)
+        
+        registerForKeyboardNotifications()
+        txtEmail.delegate = self
+        txtPassword.delegate = self
     }
+    
     
     override func viewWillAppear(_ animated: Bool) {
         // Do any additional setup after loading the view.
@@ -46,6 +54,8 @@ class LoginPageViewController: UIViewController, UITextFieldDelegate {
     override func viewWillDisappear(_ animated: Bool) {
         self.navigationController?.isNavigationBarHidden = false
         UIApplication.shared.statusBarStyle = .default
+        
+        deregisterFromKeyboardNotifications()
     }
     
     override func didReceiveMemoryWarning() {
@@ -98,6 +108,12 @@ class LoginPageViewController: UIViewController, UITextFieldDelegate {
                 let task = URLSession.shared.dataTask(with: request as URLRequest){ data, response, error in
                     if error != nil{
                         print("Error -> \(error)")
+                        DispatchQueue.main.async(execute: {
+                            self.displayAlertMessage("Error", userMessage: "Parece que no tienes una conexión estable a internet. Intenta más tarde", action: UIAlertAction(title: "Ok", style: UIAlertActionStyle.default) {
+                                action in
+                                print("")
+                            })
+                        });
                         return
                     }
                     
@@ -167,6 +183,61 @@ class LoginPageViewController: UIViewController, UITextFieldDelegate {
     
     @IBAction func registerTap(_ sender: AnyObject) {
         _ = self.navigationController?.popViewController(animated: true)
+    }
+    
+    
+    //SCROLL VIEW STUFF
+    func registerForKeyboardNotifications(){
+        //Adding notifies on keyboard appearing
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWasShown(notification:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillBeHidden(notification:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+    }
+    
+    func deregisterFromKeyboardNotifications(){
+        //Removing notifies on keyboard appearing
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+    }
+    
+    private func findActiveTextField (subviews : [UIView], textField : inout UITextField?) { for view in subviews { if let tf = view as? UITextField, view.isFirstResponder { textField = tf; break } else if !view.subviews.isEmpty { findActiveTextField (subviews: view.subviews, textField: &textField) } } }
+    
+    func keyboardWasShown(notification: NSNotification){
+        //Need to calculate keyboard exact size due to Apple suggestions
+        self.scrollView.isScrollEnabled = true
+        var info = notification.userInfo!
+        let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.size
+        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, keyboardSize!.height, 0.0)
+        
+        self.scrollView.contentInset = contentInsets
+        self.scrollView.scrollIndicatorInsets = contentInsets
+        
+        var aRect : CGRect = self.view.frame
+        aRect.size.height -= keyboardSize!.height
+        findActiveTextField(subviews:view.subviews, textField: &activeField)
+        if let activeField = self.activeField {
+            if (!aRect.contains(activeField.frame.origin)){
+                self.scrollView.scrollRectToVisible(activeField.frame, animated: true)
+            }
+        }
+    }
+    
+    func keyboardWillBeHidden(notification: NSNotification){
+        //Once keyboard disappears, restore original positions
+        var info = notification.userInfo!
+        let keyboardSize = (info[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue.size
+        let contentInsets : UIEdgeInsets = UIEdgeInsetsMake(0.0, 0.0, -keyboardSize!.height, 0.0)
+        self.scrollView.contentInset = contentInsets
+        self.scrollView.scrollIndicatorInsets = contentInsets
+        self.view.endEditing(true)
+        self.scrollView.isScrollEnabled = false
+    }
+    
+    func textFieldDidBeginEditing(_ textField: UITextField){
+        activeField = textField
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField){
+        activeField = nil
     }
     
 }
